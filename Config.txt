@@ -1,0 +1,1004 @@
+-- Configuração do GIT
+git config --global user.name lucasSouza225
+git config --global user.email lucas2469y@gmail.com
+
+-- Criar o projeto MVC
+dotnet new webapi -o BlackCoffee.API --use-controllers
+
+cd BlackCoffee
+dotnet watch run
+
+
+Referencias
+
+https://www.ristrettinho.com.br/
+https://cafeararasol.com.br/
+https://www.cafestore.com.br/
+
+______________________________________________________________________________________
+
+1. Definir com o grupo um nome para a sua loja e o segmento de mercado a ser abordado;
+
+
+2. Criar um repositório para o Projeto e compartilhar entre todos do grupo;
+
+
+3. Clona o repositório e criar uma para com o nome "Docs";
+
+
+4. Copiar o diagrama disponibilizado na Rede para a pasta Docs;
+
+
+5. Buscar fotos e dados de produtos e categorias para a loja e salvar as informações coletas na pasta "Docs";
+
+
+6. Executar o comando abaixo no terminal, substituindo <NOME DO PROJETO> pelo nome do seu projeto, lembrando de seguir as regras de nomeclatura (Primeira letra maiuscula, não adicionar: espaços, caracteres especiais, acentos ou começar com número):
+    dotnet new webapi -o <NOME DO PROJETO>.API --use-controllers
+
+6.1 Altera no arquivo <NOME DO PROJETO>.API.csproj a linha 5:
+    <Nullable>disable</Nullable>
+
+
+7. Criar na pasta do projeto uma pasta Models;
+
+
+8. Executar os comandos abaixo para adicionar as bibliotecas necessárias.
+    dotnet add package Microsoft.EntityFrameworkCore --version 9.0.10
+    dotnet add package Microsoft.EntityFrameworkCore.Design --version 9.0.10
+    dotnet add package Microsoft.EntityFrameworkCore.Tools --version 9.0.10
+    dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore --version 9.0.10
+    dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 9.0.10
+    dotnet add package System.IdentityModel.Tokens.Jwt --version 8.14.0
+    dotnet add package Pomelo.EntityFrameworkCore.MySql --version 9.0.0
+
+
+9. Criar na pasta Models, as classes do diagrama, que está na Docs (Categoria, Produto, Usuario);
+
+9.1. Lembre-se de adicionar os DataAnnotations necessários, em caso de dúvidas, consulte os projetos já desenvolvidos;
+
+
+10. Criar na pasta do projeto uma pasta Data;
+
+
+11. Criar na pasta Data a classe AppDbContext e fazer as alterações abaixo:
+using <NOME DO PROJETO>.API.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace <NOME DO PROJETO>.API.Data;
+
+public class AppDbContext : IdentityDbContext<Usuario>
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
+    
+    public DbSet<Categoria> Categorias { get; set; }
+    public DbSet<Produto> Produtos { get; set; }
+    public DbSet<Usuario> Usuarios { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        SeedUsuarioPadrao(builder);
+        SeedCategoriaPadrao(builder);
+        SeedProdutoPadrao(builder);
+    }
+
+    private static void SeedUsuarioPadrao(ModelBuilder builder)
+    {
+        #region Populate Roles - Perfis de Usuário
+        List<IdentityRole> roles =
+        [
+            new IdentityRole() {
+               Id = "0b44ca04-f6b0-4a8f-a953-1f2330d30894",
+               Name = "Administrador",
+               NormalizedName = "ADMINISTRADOR"
+            },
+            new IdentityRole() {
+               Id = "ddf093a6-6cb5-4ff7-9a64-83da34aee005",
+               Name = "Usuário",
+               NormalizedName = "USUÁRIO"
+            },
+        ];
+        builder.Entity<IdentityRole>().HasData(roles);
+        #endregion
+
+        #region Populate Usuário
+        List<Usuario> usuarios = [
+            new Usuario(){
+                Id = "ddf093a6-6cb5-4ff7-9a64-83da34aee005",
+                Email = "gallojunior@gmail.com",
+                NormalizedEmail = "GALLOJUNIOR@GMAIL.COM",
+                UserName = "gallouunior@gmail.com",
+                NormalizedUserName = "GALLOJUNIOR@GMAIL.COM",
+                LockoutEnabled = true,
+                EmailConfirmed = true,
+                Nome = "José Antonio Gallo Junior",
+                DataNascimento = DateTime.Parse("05/08/1981"),
+                Foto = "/img/usuarios/avatar.png"
+            }
+        ];
+        foreach (var user in usuarios)
+        {
+            PasswordHasher<Usuario> pass = new();
+            user.PasswordHash = pass.HashPassword(user, "123456");
+        }
+        builder.Entity<Usuario>().HasData(usuarios);
+        #endregion
+
+        #region Populate UserRole - Usuário com Perfil
+        List<IdentityUserRole<string>> userRoles =
+        [
+            new IdentityUserRole<string>() {
+                UserId = usuarios[0].Id,
+                RoleId = roles[0].Id
+            }
+        ];
+        builder.Entity<IdentityUserRole<string>>().HasData(userRoles);
+        #endregion
+    }
+
+    private static void SeedCategoriaPadrao(ModelBuilder builder)
+    {
+        List<Categoria> categorias = new()
+        {
+            // Criar suas categorias
+        };
+        builder.Entity<Categoria>().HasData(categorias);
+    }
+
+    private static void SeedProdutoPadrao(ModelBuilder builder)
+    {
+        List<Produto> produtos = new()
+        {
+            // Criar seus produtos
+        };
+        builder.Entity<Produto>().HasData(produtos);
+    }
+
+}
+
+
+12. Alterar o arquivo appsettings.json (Lembre-se de mudar: <NOME DO BANCO> e <NOME DO PROJETO>):
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "Conexao": "server=localhost;port=3306;database=<NOME DO BANCO>;uid=root;pwd=''"
+  },
+  "JwtSettings": {
+    "SecretKey" : "MinhaChaveSecretaDoSistemaQueEstouDesenvolvendoParaOProjetoInterdisciplinar",
+    "Issuer": "<NOME DO PROJETO>.API",
+    "Audience": "<NOME DO PROJETO>.APIUsers",
+    "ExpirationInMinutes": 60
+  }
+}
+
+
+13. Alterar o arquivo Program.cs
+using System.Text;
+using <NOME DO PROJETO>.API.Data;
+using <NOME DO PROJETO>.API.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Serviço de Conexão com o Banco
+string conexao = builder.Configuration.GetConnectionString("Conexao");
+var versao = ServerVersion.AutoDetect(conexao);
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(conexao, versao)
+);
+
+// Serviço de Autenticação e Autorização - Identity
+builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
+{
+    // Configurar Senha
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 0;
+
+    // Configurações de Bloqueio
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+
+    // Configuração Usuário
+    options.User.RequireUniqueEmail = true;    
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+
+// Serviço JWT
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"];
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
+    };
+});
+
+// Adicionar a Autorização
+builder.Services.AddAuthorization();
+
+// Registro dos Serviços 
+
+// Configuração do CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "<NOME DO PROJETO> API",
+        Version = "v1",
+        Description = "API de fornecimento de dados de produtos"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Cabeçalho da Autorização JWT. Exemplo: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
+
+var app = builder.Build();
+
+// Garantir que o banco exista ao executar o projeto
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "GStore v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+
+app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+
+14. Apagar os arquivos:
+    - WeatherForecast.cs
+    - Controllers\WeatherForecastController.cs
+    
+************************************************************ FEITO ATE AQUI
+
+15. Executar no terminal:
+    dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design --version 9.0.0
+    dotnet add package Microsoft.EntityFrameworkCore.SqlServer --version 9.0.10
+
+
+16. Executar no terminal para Criar os Controllers:
+    dotnet aspnet-codegenerator controller -name CategoriasController -async -api -m Categoria -dc AppDbContext -outDir Controllers
+    dotnet aspnet-codegenerator controller -name ProdutosController -async -api -m Produto -dc AppDbContext -outDir Controllers
+
+
+17. Executar e testar as rotas de dos controllers
+
+
+18. Criar a pasta Middleware e dentro a classe ErrorHandlingMiddleware:
+using System.Net;
+using System.Text.Json;
+
+namespace <NOME DO PROJETO>.API.Middleware;
+
+public class ErrorHandlingMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ErrorHandlingMiddleware> _logger;
+
+    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await _next(context);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An unhandled exception occurred");
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
+    {
+        context.Response.ContentType = "application/json";
+        
+        var response = new ErrorResponse();
+
+        switch (exception)
+        {
+            case ArgumentException ex:
+                response.Message = ex.Message;
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                break;
+            
+            case KeyNotFoundException ex:
+                response.Message = ex.Message;
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                break;
+            
+            case UnauthorizedAccessException ex:
+                response.Message = ex.Message;
+                response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                break;
+            
+            default:
+                response.Message = "Ocorreu um erro interno no servidor.";
+                response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                break;
+        }
+
+        var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
+        await context.Response.WriteAsync(jsonResponse);
+    }
+}
+
+public class ErrorResponse
+{
+    public int StatusCode { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string Details { get; set; } = string.Empty;
+}
+
+
+19. Criar a pasta DTOs e dentro o arquivo UserDtos.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace <NOME DO PROJETO>.API.DTOs;
+
+public class RegisterDto
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } 
+
+    [Required]
+    [MinLength(6)]
+    public string Senha { get; set; } 
+
+    [Required]
+    public string Nome { get; set; } 
+
+    public DateTime? DataNascimento { get; set; } 
+
+    public IFormFile Foto { get; set; }
+}
+
+public class LoginDto
+{
+    [Required]
+    public string Email { get; set; }
+
+    [Required]
+    public string Senha { get; set; } 
+}
+
+public class UserDto
+{
+    public string Id { get; set; }
+    public string Email { get; set; } 
+    public string Nome { get; set; } 
+    public DateTime? DataNascimento { get; set; }
+    public string Foto { get; set; } 
+}
+
+public class AuthResponseDto
+{
+    public string Token { get; set; } = string.Empty;
+    public DateTime Expiration { get; set; }
+    public UserDto User { get; set; } = null!;
+}
+
+
+20. Adicionar uma pasta Services e dentro desta 2 pastas:
+    Implementations
+    Interfaces
+
+
+21. Criar na pasta Interfaces a interface IFileService:
+namespace GStore.API.Services.Interfaces;
+
+public interface IFileService
+{
+    Task<string> SaveFileAsync(IFormFile file, string subDirectory = "uploads");
+    Task<bool> DeleteFileAsync(string filePath);
+    string GetFileUrl(string fileName);
+}
+
+
+22. Criar na pasta Implementations a classe FileService:
+using Microsoft.AspNetCore.Identity;
+using GStore.API.DTOs;
+using GStore.API.Services.Interfaces;
+using GStore.API.Models;
+
+namespace GStore.API.Services.Implementations;
+
+public class AuthService : IAuthService
+{
+    private readonly UserManager<Usuario> _userManager;
+    private readonly SignInManager<Usuario> _signInManager;
+    private readonly IJwtService _jwtService;
+    private readonly IFileService _fileService;
+
+    public AuthService(
+        UserManager<Usuario> userManager,
+        SignInManager<Usuario> signInManager,
+        IJwtService jwtService,
+        IFileService fileService
+    )
+    {
+        _userManager = userManager;
+        _signInManager = signInManager;
+        _jwtService = jwtService;
+        _fileService = fileService;
+    }
+
+    public async Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto)
+    {
+        var existingUser = await _userManager.FindByEmailAsync(registerDto.Email);
+        if (existingUser != null)
+        {
+            return null;
+        }
+
+        // Salvar a foto se existir
+        string fotoPath = null;
+        if (registerDto.Foto != null)
+        {
+            fotoPath = await _fileService.SaveFileAsync(registerDto.Foto, "img/usuarios");
+        }
+
+        var user = new Usuario
+        {
+            UserName = registerDto.Email,
+            Email = registerDto.Email,
+            Nome = registerDto.Nome,
+            DataNascimento = registerDto.DataNascimento,
+            Foto = fotoPath // Armazena "img/usuarios/guid.ext"
+        };
+
+        var result = await _userManager.CreateAsync(user, registerDto.Senha);
+        if (!result.Succeeded)
+        {
+            if (fotoPath != null)
+                await _fileService.DeleteFileAsync(fotoPath);
+            return null;
+        }
+
+        var token = _jwtService.GenerateToken(user);
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Nome = user.Nome,
+            DataNascimento = user.DataNascimento,
+            Foto = fotoPath != null ? _fileService.GetFileUrl(fotoPath) : null
+        };
+
+        return new AuthResponseDto
+        {
+            Token = token,
+            Expiration = DateTime.UtcNow.AddMinutes(60),
+            User = userDto
+        };
+    }
+
+    public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
+    {
+        var user = await _userManager.FindByEmailAsync(loginDto.Email);
+        if (user == null)
+        {
+            return null;
+        }
+
+        var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Senha, false);
+        if (!result.Succeeded)
+        {
+            return null;
+        }
+
+        var token = _jwtService.GenerateToken(user);
+        var userDto = new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Nome = user.Nome,
+            DataNascimento = user.DataNascimento,
+            Foto = !string.IsNullOrEmpty(user.Foto) ? _fileService.GetFileUrl(user.Foto) : null
+        };
+
+        return new AuthResponseDto
+        {
+            Token = token,
+            Expiration = DateTime.UtcNow.AddMinutes(60),
+            User = userDto
+        };
+    }
+
+    public async Task<UserDto> GetUserByIdAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return null;
+        }
+
+        return new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Nome = user.Nome,
+            DataNascimento = user.DataNascimento,
+            Foto = !string.IsNullOrEmpty(user.Foto) ? _fileService.GetFileUrl(user.Foto) : null
+        };
+    }
+}
+
+
+23. Criar a seguinte estrutura de pastas:
+    GStore.API
+        wwwroot
+            img
+                usuarios
+                produtos
+
+    Adicionar as imagens dos produtos na pasta produtos, e sua foto de usuário na pasta usuario
+
+
+24. Criar na pasta Interfaces a interface IJwtService.cs:
+using <NOME DO PROJETO>.API.Models;
+
+namespace <NOME DO PROJETO>.API.Services.Interfaces;
+
+public interface IJwtService
+{
+    string GenerateToken(Usuario user);
+}
+
+
+25. Criar na pasta Interface a interface IAuthService.cs:
+using <NOME DO PROJETO>.API.DTOs;
+
+namespace <NOME DO PROJETO>.API.Services.Interfaces;
+
+public interface IAuthService
+{
+    Task<AuthResponseDto> RegisterAsync(RegisterDto registerDto);
+    Task<AuthResponseDto> LoginAsync(LoginDto loginDto);
+    Task<UserDto> GetUserByIdAsync(string userId);
+}
+
+
+26. Criar na pasta Implementations a classe JwtService.cs:
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using <NOME DO PROJETO>.API.Services.Interfaces;
+using <NOME DO PROJETO>.API.Models;
+
+namespace <NOME DO PROJETO>.API.Services.Implementations;
+
+public class JwtService : IJwtService
+{
+    private readonly IConfiguration _configuration;
+
+    public JwtService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public string GenerateToken(Usuario user)
+    {
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"];
+        var issuer = jwtSettings["Issuer"];
+        var audience = jwtSettings["Audience"];
+        var expirationMinutes = int.Parse(jwtSettings["ExpirationInMinutes"]!);
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email!),
+            new Claim(ClaimTypes.Name, user.Nome),
+            // new Claim("foto", user.Foto ?? "/img/usuarios/no-photo.png"),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+
+
+27. Criar na pasta Implementations a classe AuthService.cs:
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using <NOME DO PROJETO>.API.Services.Interfaces;
+using <NOME DO PROJETO>.API.Models;
+
+namespace <NOME DO PROJETO>.API.Services.Implementations;
+
+public class JwtService : IJwtService
+{
+    private readonly IConfiguration _configuration;
+
+    public JwtService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public string GenerateToken(Usuario user)
+    {
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"];
+        var issuer = jwtSettings["Issuer"];
+        var audience = jwtSettings["Audience"];
+        var expirationMinutes = int.Parse(jwtSettings["ExpirationInMinutes"]!);
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Email, user.Email!),
+            new Claim(ClaimTypes.Name, user.Nome),
+            new Claim("foto", user.Foto ?? "/img/usuarios/no-photo.png"),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+
+
+28. Alterando o Program.cs para registrar os serviços:
+using System.Text;
+using <NOME DO PROJETO>.API.Data;
+using <NOME DO PROJETO>.API.Models;
+using <NOME DO PROJETO>.API.Services.Implementations;
+using <NOME DO PROJETO>.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Serviço de Conexão com o Banco
+string conexao = builder.Configuration.GetConnectionString("Conexao");
+var versao = ServerVersion.AutoDetect(conexao);
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(conexao, versao)
+);
+
+// Serviço de Autenticação e Autorização - Identity
+builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
+{
+    // Configurar Senha
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 0;
+
+    // Configurações de Bloqueio
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+
+    // Configuração Usuário
+    options.User.RequireUniqueEmail = true;    
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+
+// Serviço JWT
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"];
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey!))
+    };
+});
+
+// Adicionar a Autorização
+builder.Services.AddAuthorization();
+
+// Serviço de Arquivos
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IFileService, FileService>();
+
+// Registro dos Serviços Customizados
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Configuração do CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "<NOME DO PROJETO> API",
+        Version = "v1",
+        Description = "API de fornecimento de dados de produtos"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Cabeçalho da Autorização JWT. Exemplo: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
+
+var app = builder.Build();
+
+// Garantir que o banco exista ao executar o projeto
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "GStore v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
+
+app.UseHttpsRedirection();
+
+app.UseStaticFiles(); 
+
+app.UseCors("AllowAll");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+
+29. Criar na pasta Controllers o API Controller AuthController.cs:
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using <NOME DO PROJETO>.API.DTOs;
+using <NOME DO PROJETO>.API.Services.Interfaces;
+
+namespace <NOME DO PROJETO>.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
+{
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
+    {
+        _authService = authService;
+    }
+
+    /// <summary>
+    /// Registra um novo usuário
+    /// </summary>
+    [HttpPost("register")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<AuthResponseDto>> Register([FromForm] RegisterDto registerDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _authService.RegisterAsync(registerDto);
+        if (result == null)
+            return BadRequest(new { message = "Falha ao registrar usuário. Email pode já estar em uso." });
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Autentica um usuário
+    /// </summary>
+    [HttpPost("login")]
+    public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await _authService.LoginAsync(loginDto);
+        if (result == null)
+            return Unauthorized(new { message = "Email ou senha inválidos." });
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Obtém informações do usuário atual
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<UserDto>> GetCurrentUser()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var user = await _authService.GetUserByIdAsync(userId);
+        if (user == null)
+            return NotFound(new { message = "Usuário não encontrado." });
+
+        return Ok(user);
+    }
+
+    /// <summary>
+    /// Verifica se o token é válido
+    /// </summary>
+    [HttpGet("validate")]
+    [Authorize]
+    public ActionResult ValidateToken()
+    {
+        return Ok(new { message = "Token válido", isValid = true });
+    }
+}
+
