@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace FerroFogo.API.Models;
+namespace BlackCoffee.API.Models;
 
 [Table("Categoria")]
     public class Categoria

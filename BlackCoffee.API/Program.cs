@@ -1,6 +1,8 @@
 using System.Text;
 using BlackCoffee.API.Data;
 using BlackCoffee.API.Models;
+using BlackCoffee.API.Services.Implementations;
+using BlackCoffee.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +66,13 @@ builder.Services.AddAuthentication(options =>
 // Adicionar a Autorização
 builder.Services.AddAuthorization();
 
-// Registro dos Serviços 
+// Serviço de Arquivos
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IFileService, FileService>();
+
+// Registro dos Serviços Customizados
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Configuração do CORS
 builder.Services.AddCors(options =>
@@ -82,7 +90,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "BlackCoffee API",
+        Title = "<NOME DO PROJETO> API",
         Version = "v1",
         Description = "API de fornecimento de dados de produtos"
     });
@@ -134,6 +142,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles(); 
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();
@@ -142,4 +152,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-

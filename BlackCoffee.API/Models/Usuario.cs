@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
-namespace cd BlackCoffee.API.Models
+namespace BlackCoffee.API.Models
 {
     [Table("Usuario")]
     public class Usuario : IdentityUser

@@ -5,8 +5,14 @@ git config --global user.email lucas2469y@gmail.com
 -- Criar o projeto MVC
 dotnet new webapi -o BlackCoffee.API --use-controllers
 
-cd BlackCoffee
+Execução do projeto
+cd BlackCoffee.API 
+Por para funcionar o MySQL
 dotnet watch run
+
+(Observação)
+Se for na escola ir ao "appsettings.json" retirar a senha 
+Caso seja na sua casa verificar se tem senha no MySQL e mudar no "appsettings.json"
 
 
 Referencias
@@ -15,7 +21,15 @@ https://www.ristrettinho.com.br/
 https://cafeararasol.com.br/
 https://www.cafestore.com.br/
 
-______________________________________________________________________________________
+
+Usuario 
+
+Email = "lucas2469@ygmail.com"
+Nome = "Lucas de Souza Santos"
+Senha = "123456"
+
+**************************************************************************
+**************************************************************************
 
 1. Definir com o grupo um nome para a sua loja e o segmento de mercado a ser abordado;
 
@@ -332,8 +346,8 @@ app.Run();
 14. Apagar os arquivos:
     - WeatherForecast.cs
     - Controllers\WeatherForecastController.cs
-    
-************************************************************ FEITO ATE AQUI
+
+
 
 15. Executar no terminal:
     dotnet add package Microsoft.VisualStudio.Web.CodeGeneration.Design --version 9.0.0
@@ -343,6 +357,7 @@ app.Run();
 16. Executar no terminal para Criar os Controllers:
     dotnet aspnet-codegenerator controller -name CategoriasController -async -api -m Categoria -dc AppDbContext -outDir Controllers
     dotnet aspnet-codegenerator controller -name ProdutosController -async -api -m Produto -dc AppDbContext -outDir Controllers
+
 
 
 17. Executar e testar as rotas de dos controllers
@@ -426,6 +441,7 @@ public class ErrorResponse
     public string Message { get; set; } = string.Empty;
     public string Details { get; set; } = string.Empty;
 }
+
 
 
 19. Criar a pasta DTOs e dentro o arquivo UserDtos.cs
@@ -631,6 +647,9 @@ public class AuthService : IAuthService
                 produtos
 
     Adicionar as imagens dos produtos na pasta produtos, e sua foto de usuário na pasta usuario
+
+
+************************************************************ FEITO ATE AQUI
 
 
 24. Criar na pasta Interfaces a interface IJwtService.cs:
